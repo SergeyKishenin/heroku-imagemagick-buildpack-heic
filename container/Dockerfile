@@ -2,11 +2,12 @@ FROM heroku/heroku:20-build
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-ARG COMPILE_VERSION_LIBDE265=1.0.8
+ARG COMPILE_VERSION_LIBDE265=1.0.11
+ARG COMPILE_VERSION_LIBX265=3.5.2
 ARG COMPILE_VERSION_LIBAOM=3.4.0
-ARG COMPILE_VERSION_LIBHEIF=1.12.0
+ARG COMPILE_VERSION_LIBHEIF=1.15.0
 ARG COMPILE_VERSION_LIBWEBP=1.2.3
-ARG COMPILE_VERSION_IMAGEMAGICK=7.1.0-44
+ARG COMPILE_VERSION_IMAGEMAGICK=7.1.1-6
 
 RUN apt-get -yq update \
   # Needed for libaom library cmake optimizations
@@ -20,6 +21,8 @@ RUN apt-get -yq update \
   && make install \
   && ldconfig /usr/local/lib \
   && cd .. \
+  # Install the latest libx265 library
+  && apt-get install -y libx265-dev \
   # Install the latest libwebp library
   && curl -sSL --retry 3 http://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-$COMPILE_VERSION_LIBWEBP.tar.gz | tar zx \
   && cd libwebp-$COMPILE_VERSION_LIBWEBP \
