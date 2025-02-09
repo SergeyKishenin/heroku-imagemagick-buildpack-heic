@@ -1,13 +1,14 @@
-FROM heroku/heroku:20-build
+FROM heroku/heroku:24-build
+
+USER root
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-ARG COMPILE_VERSION_LIBDE265=1.0.11
-ARG COMPILE_VERSION_LIBX265=3.5.2
-ARG COMPILE_VERSION_LIBAOM=3.4.0
-ARG COMPILE_VERSION_LIBHEIF=1.15.0
-ARG COMPILE_VERSION_LIBWEBP=1.2.3
-ARG COMPILE_VERSION_IMAGEMAGICK=7.1.1-6
+ARG COMPILE_VERSION_LIBDE265=1.0.15
+ARG COMPILE_VERSION_LIBAOM=3.11.0
+ARG COMPILE_VERSION_LIBHEIF=1.19.5
+ARG COMPILE_VERSION_LIBWEBP=1.5.0
+ARG COMPILE_VERSION_IMAGEMAGICK=7.1.1-43
 
 RUN apt-get -yq update \
   # Needed for libaom library cmake optimizations
@@ -44,10 +45,11 @@ RUN apt-get -yq update \
   # Install the latest libheif library
   && curl -sSL --retry 3 https://github.com/strukturag/libheif/releases/download/v$COMPILE_VERSION_LIBHEIF/libheif-$COMPILE_VERSION_LIBHEIF.tar.gz | tar zx \
   && cd libheif-$COMPILE_VERSION_LIBHEIF \
-  && ./autogen.sh \
-  && ./configure \
-  && make -j$(nproc) \
-  && make install \
+  && mkdir build \
+  && cd build \
+  && cmake --preset=release-noplugins .. \
+  && make \
+  && make install\
   && ldconfig /usr/local/lib \
   && cd .. \
   # Get, configure and install ImageMagick
@@ -61,8 +63,8 @@ RUN apt-get -yq update \
   # Copy shared libraries just compiled
   && cp /usr/local/lib/libaom.so.3 /usr/src/imagemagick/lib \
   && cp /usr/local/lib/libde265.so.0 /usr/src/imagemagick/lib \
-  && cp /usr/local/lib/libheif.so.1 /usr/src/imagemagick/lib \
   && cp /usr/local/lib/libwebp.so.7 /usr/src/imagemagick/lib \
+  && cp /usr/local/lib/libheif.so.1 /usr/src/imagemagick/lib \
   # Clean up the build and get ready for packaging
   && cd /usr/src/imagemagick \
   && strip lib/*.a lib/lib*.so* \
